@@ -4,7 +4,9 @@ const jwt = require("jsonwebtoken");
 const { route } = require("../routes/authRoutes");
 
 const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "365d" });
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "365d",
+  });
 };
 
 // @desc Register a new user
@@ -13,19 +15,20 @@ const generateToken = (userId) => {
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, profileImageUrl, adminInviteToken } =
-        req.body;
+      req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
-    if(userExists) {
-        return res.status(400).json({ message: "User already exists" });
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
     }
 
     let role = "member";
     if (
-        adminInviteToken && adminInviteToken == process.env.ADMIN_INVITE_TOKEN
+      adminInviteToken &&
+      adminInviteToken == process.env.ADMIN_INVITE_TOKEN
     ) {
-        role = "admin"
+      role = "admin";
     }
 
     // Hash password
@@ -34,20 +37,20 @@ const registerUser = async (req, res) => {
 
     // Create new User
     const user = await User.create({
-        name,
-        email,
-        password: hashedPassword,
-        profileImageUrl,
-        role,
+      name,
+      email,
+      password: hashedPassword,
+      profileImageUrl,
+      role,
     });
 
     res.status(201).json({
-        _id: (await user)._id,
-        name: (await user).name,
-        email: (await user).email,
-        role: user.role,
-        profileImageUrl: user.profileImageUrl,
-        token: generateToken(user._id),
+      _id: (await user)._id,
+      name: (await user).name,
+      email: (await user).email,
+      role: user.role,
+      profileImageUrl: user.profileImageUrl,
+      token: generateToken(user._id),
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -62,13 +65,13 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if(!user) {
+    if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if(!isMatch) {
+    if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
@@ -91,7 +94,7 @@ const loginUser = async (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
-    if(!user) {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -108,15 +111,14 @@ const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
-    if(!user) {
+    if (!user) {
       return res.status(404).json({ message: "Usr not found" });
     }
 
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
 
-
-    if(req.body.password) {
+    if (req.body.password) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(req.body.password, salt);
     }
