@@ -6,6 +6,8 @@ import ProfilePhotoSelector from "../../components/Inputs/ProfilePhotoSelector";
 import Input from "../../components/Inputs/Input";
 import { validateEmail } from "../../utils/helper";
 import { Link, ServerRouter, useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
 
 const SignUp = () => {
   const [profilePic, setProfilePic] = useState(null);
@@ -37,6 +39,33 @@ const SignUp = () => {
     setError("");
 
     // SignUp API call
+    try {
+      const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
+        name: fullName,
+        email,
+        password,
+        adminInviteToken,
+      });
+
+      const { token, role } = response.data;
+
+      if (token) {
+        localStorage.setItem("token", token);
+        updateUser(response.data); // make sure the function is defined and correctly named
+
+        if (role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/user/dashboard");
+        }
+      }
+    } catch (error) {
+      if (error.response && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        setError("Something went wrong, please try again.");
+      }
+    }
   };
 
   return (
