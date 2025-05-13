@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import AuthLayout from "../../components/layouts/AuthLayout";
 import { useAsyncError } from "react-router-dom";
 import { Profiler } from "react";
@@ -8,6 +8,8 @@ import { validateEmail } from "../../utils/helper";
 import { Link, ServerRouter, useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
+import { UserContext } from "../../context/userContext";
+import uploadImage from "../../utils/uploadImage";
 
 const SignUp = () => {
   const [profilePic, setProfilePic] = useState(null);
@@ -18,8 +20,13 @@ const SignUp = () => {
 
   const [error, setError] = useState("");
 
+  const {updateUser} = useContext(UserContext)
+  const navigate = useNavigate();
+
   const handleSignUp = async (e) => {
     e.preventDefault();
+
+    let profileImageUrl = ''
 
     if (!fullName) {
       setError("Please enter full Name.");
@@ -40,6 +47,10 @@ const SignUp = () => {
 
     // SignUp API call
     try {
+
+      if(profilePic) {
+        const imageUploadRes = await uploadImage(profilePic);
+      }
       const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
         name: fullName,
         email,
@@ -106,7 +117,7 @@ const SignUp = () => {
 
             <Input
               value={password}
-              onChange={({ target }) => setPassword(target.value)}
+              onChange={({ target }) => setAdminInviteToken(target.value)}
               label="Admin Invite token"
               placeholder="6 Digit Code"
               type="text"
