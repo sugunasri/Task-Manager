@@ -73,14 +73,13 @@ const getTasks = async (req, res) => {
 
 const getTaskById = async (req, res) => {
   try {
-    const task = (await Task.findById(req.params.id)).populated(
-      "assignedTo",
-      "name email profileImageUrl"
-    );
+    const task = await Task.findById(req.params.id)
+      .populate("assignedTo", "name email profileImageUrl")
+      .lean();
 
     if (!task) return res.status(404).json({ message: "Task not found" });
 
-    res.join(task);
+    res.json(task);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -110,12 +109,12 @@ const createTask = async (req, res) => {
       priority,
       dueDate,
       assignedTo,
-      createdBy: req.user_id,
+      createdBy: req.user._id,
       todoCheckList,
       attachments,
     });
 
-    res.status(201).json({ message: "Task created Successfully" });
+    res.status(201).json({ message: "Task created Successfully", task: task });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -127,6 +126,7 @@ const updateTask = async (req, res) => {
 
     if (!task) return res.status(404).json({ message: "Task not found" });
 
+    // Update fields (only if they exist in req.body)
     task.title = req.body.title || task.title;
     task.description = req.body.description || task.description;
     task.priority = req.body.priority || task.priority;
@@ -140,12 +140,11 @@ const updateTask = async (req, res) => {
           .status(400)
           .json({ message: "assignedTo must be an array of user IDs" });
       }
-
       task.assignedTo = req.body.assignedTo;
     }
 
     const updatedTask = await task.save();
-    res.join({ message: "Task updated Successfully", updatedTask });
+    res.json({ message: "Task updated Successfully", updatedTask }); // Fixed: res.json()
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
