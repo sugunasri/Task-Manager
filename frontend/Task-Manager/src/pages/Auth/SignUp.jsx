@@ -116,7 +116,7 @@ const SignUp = () => {
             />
 
             <Input
-              value={password}
+              value={adminInviteToken}
               onChange={({ target }) => setAdminInviteToken(target.value)}
               label="Admin Invite token"
               placeholder="6 Digit Code"

@@ -45,7 +45,7 @@ const App = () => {
               />
             </Route>
 
-            {/* Default Route*/}
+            {/* Default Route*/}          
             <Route path="/" element={<Root />} />
           </Routes>
         </Router>
